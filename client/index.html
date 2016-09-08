@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en" ng-app='superttt'>
+  <head>
+    <title>Chat Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+      
+      table {
+        border-collapse: collapse;
+        margin: 10px;
+      }
+      
+      /* Game States */
+      .active {
+        background-color: rgba(255,237,160, 0.85);
+        border: rgba(251,180,80,0.25) solid 3px;
+      }
+      
+      .win_one {
+        background-color: rgba(220, 50, 50, 0.75);
+      }
+      .win_two {
+        background-color: rgba(10, 100, 210, 0.75);
+      }
+      .draw {
+        background-color: rgba(100, 100, 130, 0.75);
+      }
+      
+      /* Inner Board Elements */
+      .active .activeElem:hover {
+        background-color: rgba(100, 100, 100, 0.5);
+        cursor: pointer;
+      }
+      table td > .innerElem {
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        line-height: 25px;
+        cursor: default;
+      }
+      
+      .subBoard td {
+        border: 1px solid black;
+      }
+      .gameBoard > tbody > tr > td {
+        border: 3px solid black;
+      }
+      table td > .subBoard {
+        padding: 15px;
+        margin: 5px;
+        border: transparent solid 3px;
+      }
+      table td > div {
+        border-radius:15px;
+      }
+      table tr:first-child td {
+        border-top: none;
+      }
+      table tr:last-child td {
+        border-bottom: none;
+      }
+      table tr td:first-child {
+        border-left: none;
+      }
+      table tr td:last-child {
+        border-right: none;
+      }
+      
+      /* Game Board Message*/
+      .gameEndMessage {
+        position: absolute;
+        margin: auto;
+        z-index: 100;
+        top: 50%;
+        left: calc(50% - 180px);
+        padding: 30px;
+        width: 300px;
+        background-color: rgba(13, 13, 13, 0.85);
+        color: white;
+        text-align: center;
+      }
+    </style>
+    <script>
+      // function ChatController($scope) {
+      //   var socket = io.connect();
+
+      //   $scope.messages = [];
+      //   $scope.roster = [];
+      //   $scope.name = '';
+      //   $scope.text = '';
+
+      //   socket.on('connect', function () {
+      //     $scope.setName();
+      //   });
+
+      //   socket.on('message', function (msg) {
+      //     $scope.messages.push(msg);
+      //     $scope.$apply();
+      //   });
+
+      //   socket.on('roster', function (names) {
+      //     $scope.roster = names;
+      //     $scope.$apply();
+      //   });
+
+      //   $scope.send = function send() {
+      //     console.log('Sending message:', $scope.text);
+      //     socket.emit('message', $scope.text);
+      //     $scope.text = '';
+      //   };
+
+      //   $scope.setName = function setName() {
+      //     socket.emit('identify', $scope.name);
+      //   };
+      // }
+
+    </script>
+  </head>
+  <body>
+    <div class="container" ng-controller="MainCtrl">
+      
+      <div class='col-md-8 col-md-offset-2'>
+        <!-- Status -->
+        <!--<div ng-show='updateGameStatus()'>{{updateGameStatus()}}</div>-->
+        <!--<div ng-show='gameBoard.winner === 0 && player === 1'> Player 1's turn</div>-->
+        <!--<div ng-show='gameBoard.winner === 0 && player === 2'> Player 2's turn</div>-->
+        <!--<div ng-show='gameBoard.winner === 1'>Player 1 Wins!</div>-->
+        <!--<div ng-show='gameBoard.winner === 2'>Player 2 Wins!</div>-->
+        <!--<div ng-show='gameBoard.winner === 3'>DRAW!</div>-->
+        <div class='gameEndMessage {{getState()}}' ng-show='gameBoard.winner !== 0'>
+          {{updateGameStatus()}}
+          <div class='gameWinner'>
+            {{getMarker(gameBoard.winner)}}
+          </div>
+        </div>
+        
+        <!-- Players -->
+        <div class='col-xs-6' 
+          ng-repeat='i in [1, 2]'
+          ng-class='{"activePlayer":(gameBoard.winner === 0 && player === i)}'>
+          Player {{i}}: {{getMarker(i)}}
+          <span ng-show='gameBoard.winner === 0 && player === i'>
+            - Your Turn!
+          </span>
+          <span ng-show='gameBoard.winner === i'>
+            - You Win!
+          </span>
+        </div>
+        <!--<div class='col-xs-6' ng-class='{"active":(gameBoard.winner === 0 && player === 1)}'>-->
+        <!--  Player 2: O-->
+        <!--  <span ng-show='gameBoard.winner === 0 && player === 2'>-->
+        <!--    - Your Turn!-->
+        <!--  </span>-->
+        <!--  <span ng-show='gameBoard.winner === 2'>-->
+        <!--    - You Win!-->
+        <!--  </span>-->
+        <!--</div>-->
+        
+        <!-- Board -->
+        <table class='gameBoard'>
+          <tr ng-repeat='row in board track by $index' ng-init='boardx = $index'>
+            <td ng-repeat='column in row track by $index' ng-init='boardy = $index'>
+              <div class='{{column.getState()}} subBoard'>
+                <table class='subBoard'>
+                  <tr ng-repeat='subrow in column.board track by $index'  ng-init='elemx = $index'>
+                    <td ng-repeat='subcolumn in subrow track by $index'  ng-init='elemy = $index'>
+                      <div class='innerElem' ng-class='{"activeElem":!getMarker(subcolumn)}' 
+                        ng-click='playerTurn(boardx, boardy, elemx, elemy)'>
+                        {{getMarker(subcolumn)}}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+        <br /> <br />
+        <div ng-controller="Ctrl">
+          <h1>{{title}}</h1>
+          
+          <form>
+            <h2>Input</h2>
+            <input ng-model='search'></input>
+          </form>
+          
+          <h2>Fetched Countries</h2>
+          <div ng-show='search' ng-repeat='country in countries | filter:search | limitTo:10'>
+            <input type='checkbox' ng-model='country.selected'></input>
+            {{country.name}}
+          </div>
+        
+          <h2>Selected Countries</h2>
+          <div ng-repeat='country in countries | filter:{selected:true}' ng-click='removeCountry(country.name)'>
+            {{country.name}}
+          </div>
+        </div>
+
+      
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    <script type="text/javascript" src="/js/main.js"></script>
+  </body>
+</html>
