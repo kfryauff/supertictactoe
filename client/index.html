@@ -125,13 +125,6 @@
     <div class="container" ng-controller="MainCtrl">
       
       <div class='col-md-8 col-md-offset-2'>
-        <!-- Status -->
-        <!--<div ng-show='updateGameStatus()'>{{updateGameStatus()}}</div>-->
-        <!--<div ng-show='gameBoard.winner === 0 && player === 1'> Player 1's turn</div>-->
-        <!--<div ng-show='gameBoard.winner === 0 && player === 2'> Player 2's turn</div>-->
-        <!--<div ng-show='gameBoard.winner === 1'>Player 1 Wins!</div>-->
-        <!--<div ng-show='gameBoard.winner === 2'>Player 2 Wins!</div>-->
-        <!--<div ng-show='gameBoard.winner === 3'>DRAW!</div>-->
         <div class='gameEndMessage {{getState()}}' ng-show='gameBoard.winner !== 0'>
           {{updateGameStatus()}}
           <div class='gameWinner'>
@@ -151,15 +144,6 @@
             - You Win!
           </span>
         </div>
-        <!--<div class='col-xs-6' ng-class='{"active":(gameBoard.winner === 0 && player === 1)}'>-->
-        <!--  Player 2: O-->
-        <!--  <span ng-show='gameBoard.winner === 0 && player === 2'>-->
-        <!--    - Your Turn!-->
-        <!--  </span>-->
-        <!--  <span ng-show='gameBoard.winner === 2'>-->
-        <!--    - You Win!-->
-        <!--  </span>-->
-        <!--</div>-->
         
         <!-- Board -->
         <table class='gameBoard'>
